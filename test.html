@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试页面</title>
+</head>
+<body>
+    <h1>JavaScript测试页面</h1>
+    <div id="fileUpload">文件上传区域</div>
+    <input type="file" id="fileInput" multiple>
+    <button id="processBtn">处理按钮</button>
+    <div id="fileList"></div>
+    <div id="progressContainer"></div>
+    <div id="progressBar"></div>
+    <div id="results"></div>
+    <div id="resultContent"></div>
+    
+    <script>
+        console.log('测试页面加载完成');
+        
+        // 测试基本DOM元素
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM加载完成');
+            
+            const elements = {
+                fileUpload: document.getElementById('fileUpload'),
+                fileInput: document.getElementById('fileInput'),
+                processBtn: document.getElementById('processBtn'),
+                fileList: document.getElementById('fileList'),
+                progressContainer: document.getElementById('progressContainer'),
+                progressBar: document.getElementById('progressBar'),
+                results: document.getElementById('results'),
+                resultContent: document.getElementById('resultContent')
+            };
+            
+            console.log('DOM元素检查:', elements);
+            
+            // 测试基本功能
+            elements.processBtn.addEventListener('click', () => {
+                console.log('按钮点击测试成功');
+                alert('按钮功能正常');
+            });
+            
+            elements.fileInput.addEventListener('change', (e) => {
+                console.log('文件选择测试:', e.target.files);
+            });
+        });
+    </script>
+    
+    <script src="restore_shp.js"></script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调试页面 - Shapefile修复工具</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .upload-area { border: 2px dashed #ccc; padding: 20px; margin: 20px 0; text-align: center; }
+        .file-item { background: #f0f0f0; padding: 10px; margin: 5px 0; }
+        button { padding: 10px 20px; margin: 10px 0; }
+        .results { background: #e8f4fd; padding: 15px; margin: 20px 0; }
+        .debug { background: #fff3cd; padding: 10px; margin: 10px 0; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Shapefile修复工具 - 调试版本</h1>
+    
+    <div class="debug" id="debugLog">调试信息将显示在这里...</div>
+    
+    <div class="upload-area" id="fileUpload">
+        <p>点击这里选择文件或拖拽文件到此处</p>
+        <input type="file" id="fileInput" multiple accept=".shp,.dbf,.shx,.prj">
+    </div>
+    
+    <div id="fileList"></div>
+    
+    <button id="processBtn" disabled>开始处理文件</button>
+    
+    <div class="results" id="results" style="display: none;">
+        <h3>处理结果</h3>
+        <div id="resultContent"></div>
+    </div>
+    
+    <div id="progressContainer" style="display: none;">
+        <div id="progressBar" style="width: 0%; height: 20px; background: blue;"></div>
+    </div>
+
+    <script>
+        // 调试日志函数
+        function debugLog(message) {
+            const debugDiv = document.getElementById('debugLog');
+            const timestamp = new Date().toLocaleTimeString();
+            debugDiv.innerHTML += `<br>[${timestamp}] ${message}`;
+            console.log(`[DEBUG] ${message}`);
+        }
+        
+        debugLog('页面开始加载...');
+        
+        // 简化的Shapefile处理类
+        class SimpleShapefileRestorer {
+            constructor() {
+                debugLog('创建SimpleShapefileRestorer实例');
+                this.files = new Map();
+                this.results = [];
+                this.init();
+            }
+            
+            init() {
+                debugLog('开始初始化...');
+                
+                const fileUpload = document.getElementById('fileUpload');
+                const fileInput = document.getElementById('fileInput');
+                const processBtn = document.getElementById('processBtn');
+                
+                if (!fileUpload || !fileInput || !processBtn) {
+                    debugLog('错误：找不到必要的DOM元素');
+                    return;
+                }
+                
+                debugLog('DOM元素找到，绑定事件...');
+                
+                // 文件上传点击事件
+                fileUpload.addEventListener('click', () => {
+                    debugLog('上传区域被点击');
+                    fileInput.click();
+                });
+                
+                // 文件选择事件
+                fileInput.addEventListener('change', (e) => {
+                    debugLog(`文件选择事件触发，文件数量: ${e.target.files.length}`);
+                    this.handleFiles(e.target.files);
+                });
+                
+                // 拖拽事件
+                fileUpload.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    debugLog('拖拽悬停');
+                });
+                
+                fileUpload.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    debugLog(`文件拖拽放下，文件数量: ${e.dataTransfer.files.length}`);
+                    this.handleFiles(e.dataTransfer.files);
+                });
+                
+                // 处理按钮事件
+                processBtn.addEventListener('click', () => {
+                    debugLog('处理按钮被点击');
+                    this.processFiles();
+                });
+                
+                debugLog('事件绑定完成');
+            }
+            
+            handleFiles(files) {
+                debugLog(`开始处理 ${files.length} 个文件`);
+                
+                const fileList = document.getElementById('fileList');
+                const processBtn = document.getElementById('processBtn');
+                
+                this.files.clear();
+                fileList.innerHTML = '';
+                
+                Array.from(files).forEach(file => {
+                    const extension = file.name.split('.').pop().toLowerCase();
+                    debugLog(`处理文件: ${file.name}, 扩展名: ${extension}`);
+                    
+                    if (['shp', 'dbf', 'shx', 'prj'].includes(extension)) {
+                        this.files.set(extension, file);
+                        this.addFileToList(file, extension);
+                        debugLog(`文件 ${file.name} 已添加到列表`);
+                    } else {
+                        debugLog(`文件 ${file.name} 不是支持的格式`);
+                    }
+                });
+                
+                const hasShp = this.files.has('shp');
+                const hasDbf = this.files.has('dbf');
+                
+                debugLog(`文件检查: SHP=${hasShp}, DBF=${hasDbf}`);
+                
+                processBtn.disabled = !(hasShp && hasDbf);
+                
+                if (hasShp && hasDbf) {
+                    debugLog('文件检查通过，可以开始处理');
+                } else {
+                    debugLog('警告：需要同时上传.shp和.dbf文件');
+                }
+            }
+            
+            addFileToList(file, extension) {
+                const fileList = document.getElementById('fileList');
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `📄 ${file.name} (${extension.toUpperCase()}) - ${this.formatFileSize(file.size)}`;
+                fileList.appendChild(fileItem);
+            }
+            
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+            
+            async processFiles() {
+                debugLog('开始处理文件...');
+                
+                const processBtn = document.getElementById('processBtn');
+                const results = document.getElementById('results');
+                const resultContent = document.getElementById('resultContent');
+                const progressContainer = document.getElementById('progressContainer');
+                const progressBar = document.getElementById('progressBar');
+                
+                processBtn.disabled = true;
+                processBtn.textContent = '正在处理...';
+                progressContainer.style.display = 'block';
+                results.style.display = 'none';
+                
+                try {
+                    // 模拟处理步骤
+                    for (let i = 1; i <= 5; i++) {
+                        debugLog(`处理步骤 ${i}/5`);
+                        await this.delay(500);
+                        progressBar.style.width = (i * 20) + '%';
+                    }
+                    
+                    // 模拟结果
+                    const shpRecords = Math.floor(Math.random() * 1000) + 100;
+                    const dbfRecords = shpRecords + Math.floor(Math.random() * 21) - 10;
+                    
+                    debugLog(`模拟结果: SHP记录=${shpRecords}, DBF记录=${dbfRecords}`);
+                    
+                    resultContent.innerHTML = `
+                        <p>✅ 处理完成！</p>
+                        <p>SHP文件记录数: ${shpRecords}</p>
+                        <p>DBF文件记录数: ${dbfRecords}</p>
+                        <p>差异: ${Math.abs(shpRecords - dbfRecords)} 条记录</p>
+                        <p>${shpRecords === dbfRecords ? '✅ 数据一致，无需修复' : '⚠️ 数据不一致，需要修复'}</p>
+                    `;
+                    
+                    results.style.display = 'block';
+                    debugLog('处理完成，结果已显示');
+                    
+                } catch (error) {
+                    debugLog(`处理出错: ${error.message}`);
+                } finally {
+                    processBtn.disabled = false;
+                    processBtn.textContent = '开始处理文件';
+                    progressContainer.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }
+            }
+            
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            debugLog('DOM加载完成');
+            try {
+                const restorer = new SimpleShapefileRestorer();
+                debugLog('应用初始化成功');
+                window.restorer = restorer; // 便于调试
+            } catch (error) {
+                debugLog(`初始化失败: ${error.message}`);
+            }
+        });
+        
+        debugLog('脚本加载完成');
+    </script>
+</body>
+</html>
