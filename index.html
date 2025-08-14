@@ -363,12 +363,8 @@
         </div>
 
         <div class="stats-section">
-            <h4>📈 网站统计</h4>
+            <h4>📈 修复统计</h4>
             <div class="visit-counter">
-                <span class="visit-icon">👁️</span>
-                <span>访问次数: <span id="visitCount">0</span></span>
-            </div>
-            <div class="visit-counter" style="margin-top: 10px;">
                 <span class="visit-icon">🔧</span>
                 <span>修复次数: <span id="repairCount">0</span></span>
             </div>
@@ -394,17 +390,15 @@
             }
         ];
         
-        // 模拟全局统计数据（当所有API都不可用时）
-        let simulatedStats = {
-            visitCount: Math.floor(Math.random() * 1000) + 500, // 模拟500-1500的访问量
-            repairCount: Math.floor(Math.random() * 200) + 100   // 模拟100-300的修复量
+        // 模拟统计数据（当API不可用时使用）
+        const simulatedStats = {
+            repairCount: 0   // 修复次数从0开始
         };
         
         // 获取全局统计数据
         async function getGlobalStats() {
             // 首先尝试从localStorage获取上次的统计数据
             const lastStats = {
-                visitCount: parseInt(localStorage.getItem('fixshp_global_visit_count') || simulatedStats.visitCount),
                 repairCount: parseInt(localStorage.getItem('fixshp_global_repair_count') || '0')
             };
             
@@ -419,22 +413,6 @@
             }, 100);
             
             return lastStats;
-        }
-        
-        // 增加访问次数
-        async function incrementVisitCount() {
-            try {
-                // 尝试更新真实API（但由于网络问题，直接使用本地计算）
-                let currentCount = parseInt(localStorage.getItem('fixshp_global_visit_count') || simulatedStats.visitCount);
-                currentCount++;
-                localStorage.setItem('fixshp_global_visit_count', currentCount);
-                return currentCount;
-            } catch (error) {
-                console.log('更新访问统计失败，使用本地计算:', error);
-                let count = parseInt(localStorage.getItem('fixshp_global_visit_count') || simulatedStats.visitCount) + 1;
-                localStorage.setItem('fixshp_global_visit_count', count);
-                return count;
-            }
         }
         
         // 增加修复次数
@@ -453,12 +431,6 @@
             }
         }
         
-        // 访问统计功能
-        async function updateVisitCount() {
-            const newCount = await incrementVisitCount();
-            document.getElementById('visitCount').textContent = newCount;
-        }
-        
         // 修复次数统计功能
         async function updateRepairCount() {
             const newCount = await incrementRepairCount();
@@ -468,14 +440,12 @@
         // 初始化统计显示
         async function initStats() {
             const stats = await getGlobalStats();
-            document.getElementById('visitCount').textContent = stats.visitCount;
             document.getElementById('repairCount').textContent = stats.repairCount;
         }
         
-        // 页面加载时初始化统计并更新访问次数
+        // 页面加载时初始化统计
         document.addEventListener('DOMContentLoaded', async function() {
             await initStats();
-            await updateVisitCount();
         });
         
         // 全局函数，供restore_shp.js调用
