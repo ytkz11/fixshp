@@ -254,6 +254,37 @@
             padding-left: 20px;
         }
 
+        .stats-section {
+            margin-top: 20px;
+            padding: 15px 20px;
+            background: #f0f8ff;
+            border-radius: 10px;
+            border-left: 4px solid #4a90e2;
+            text-align: center;
+        }
+
+        .stats-section h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .visit-counter {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+            color: #4a90e2;
+        }
+
+        .visit-icon {
+            font-size: 1.2em;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
@@ -330,8 +361,91 @@
 
             </ul>
         </div>
+
+        <div class="stats-section">
+            <h4>📈 网站统计</h4>
+            <div class="visit-counter">
+                <span class="visit-icon">👁️</span>
+                <span>访问次数: <span id="visitCount">0</span></span>
+            </div>
+            <div class="visit-counter" style="margin-top: 10px;">
+                <span class="visit-icon">🔧</span>
+                <span>修复次数: <span id="repairCount">0</span></span>
+            </div>
+        </div>
     </div>
 
+    <script>
+        // 访问统计功能
+        function updateVisitCount() {
+            // 从localStorage获取当前访问次数
+            let visitCount = localStorage.getItem('fixshp_visit_count');
+            
+            // 如果是第一次访问，初始化为0
+            if (!visitCount) {
+                visitCount = 0;
+            } else {
+                visitCount = parseInt(visitCount);
+            }
+            
+            // 增加访问次数
+            visitCount++;
+            
+            // 保存到localStorage
+            localStorage.setItem('fixshp_visit_count', visitCount);
+            
+            // 更新页面显示
+            document.getElementById('visitCount').textContent = visitCount;
+        }
+        
+        // 修复次数统计功能
+        function updateRepairCount() {
+            // 从localStorage获取当前修复次数
+            let repairCount = localStorage.getItem('fixshp_repair_count');
+            
+            // 如果是第一次，初始化为0
+            if (!repairCount) {
+                repairCount = 0;
+            } else {
+                repairCount = parseInt(repairCount);
+            }
+            
+            // 增加修复次数
+            repairCount++;
+            
+            // 保存到localStorage
+            localStorage.setItem('fixshp_repair_count', repairCount);
+            
+            // 更新页面显示
+            document.getElementById('repairCount').textContent = repairCount;
+        }
+        
+        // 初始化修复次数显示
+        function initRepairCount() {
+            let repairCount = localStorage.getItem('fixshp_repair_count');
+            if (!repairCount) {
+                repairCount = 0;
+            }
+            document.getElementById('repairCount').textContent = repairCount;
+        }
+        
+        // 页面加载时更新访问次数和初始化修复次数显示
+        document.addEventListener('DOMContentLoaded', function() {
+            updateVisitCount();
+            initRepairCount();
+            
+            // 为修复按钮添加点击事件监听器
+            const processBtn = document.getElementById('processBtn');
+            if (processBtn) {
+                processBtn.addEventListener('click', function() {
+                    // 只有在按钮不是disabled状态时才统计
+                    if (!this.disabled) {
+                        updateRepairCount();
+                    }
+                });
+            }
+        });
+    </script>
     <script src="restore_shp.js"></script>
 </body>
 </html>
