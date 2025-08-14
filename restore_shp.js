@@ -125,6 +125,11 @@ class ShapefileRestorer {
         const results = document.getElementById('results');
         const resultContent = document.getElementById('resultContent');
 
+        // 统计修复次数（在开始处理时调用）
+        if (window.updateRepairCountGlobal) {
+            window.updateRepairCountGlobal();
+        }
+
         // 开始处理
         processBtn.disabled = true;
         processBtn.textContent = '🔄 正在处理...';

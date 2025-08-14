@@ -405,7 +405,7 @@
             // 首先尝试从localStorage获取上次的统计数据
             const lastStats = {
                 visitCount: parseInt(localStorage.getItem('fixshp_global_visit_count') || simulatedStats.visitCount),
-                repairCount: parseInt(localStorage.getItem('fixshp_global_repair_count') || simulatedStats.repairCount)
+                repairCount: parseInt(localStorage.getItem('fixshp_global_repair_count') || '0')
             };
             
             // 尝试从API获取最新数据（但不阻塞页面加载）
@@ -441,13 +441,13 @@
         async function incrementRepairCount() {
             try {
                 // 尝试更新真实API（但由于网络问题，直接使用本地计算）
-                let currentCount = parseInt(localStorage.getItem('fixshp_global_repair_count') || simulatedStats.repairCount);
+                let currentCount = parseInt(localStorage.getItem('fixshp_global_repair_count') || '0');
                 currentCount++;
                 localStorage.setItem('fixshp_global_repair_count', currentCount);
                 return currentCount;
             } catch (error) {
                 console.log('更新修复统计失败，使用本地计算:', error);
-                let count = parseInt(localStorage.getItem('fixshp_global_repair_count') || simulatedStats.repairCount) + 1;
+                let count = parseInt(localStorage.getItem('fixshp_global_repair_count') || '0') + 1;
                 localStorage.setItem('fixshp_global_repair_count', count);
                 return count;
             }
@@ -476,18 +476,10 @@
         document.addEventListener('DOMContentLoaded', async function() {
             await initStats();
             await updateVisitCount();
-            
-            // 为修复按钮添加点击事件监听器
-            const processBtn = document.getElementById('processBtn');
-            if (processBtn) {
-                processBtn.addEventListener('click', function() {
-                    // 只有在按钮不是disabled状态时才统计
-                    if (!this.disabled) {
-                        updateRepairCount();
-                    }
-                });
-            }
         });
+        
+        // 全局函数，供restore_shp.js调用
+        window.updateRepairCountGlobal = updateRepairCount;
     </script>
     <script src="restore_shp.js"></script>
 </body>
